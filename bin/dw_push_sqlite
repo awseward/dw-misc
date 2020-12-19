@@ -2,23 +2,27 @@
 
 set -euo pipefail
 
-readonly sj_access_name="${SJ_ACCESS_NAME:-dw-write}"
-readonly sj_shelf_life="${SJ_SHELF_LIFE:-10 days}"
+_run() {
+  local -r sj_access_name="${SJ_ACCESS_NAME:-dw-write}"
+  local -r sj_shelf_life="${SJ_SHELF_LIFE:-10 days}"
 
-readonly sqlite_file="$1"
-readonly sj_prefix="$2"
+  local -r sqlite_file="$1"
+  local -r sj_prefix="$2"
 
-readonly now_s="$(date -u +%Y%m%d%H%M%S)"
-readonly sj_filename="$(
-  mktemp -u -t "${now_s}-XXXXXXXX-$(basename "${sqlite_file}")" | xargs basename
-)"
+  local -r now_s="$(date -u +%Y%m%d%H%M%S)"
+  local -r sj_filename="$(
+    mktemp -u -t "${now_s}-XXXXXXXX-$(basename "${sqlite_file}")" | xargs basename
+  )"
 
-echo "${sj_access_name}" \
-  | xargs -t  uplink cp "${sqlite_file}" "${sj_prefix}/${sj_filename}" \
-                --progress=false \
-                --expires="$(date -d "${sj_shelf_life}" -u +%FT%TZ)" \
-                --access \
-  | sed -E 's/^Created //' \
-  && (
-    echo "${sqlite_file}" | xargs -t >&2 rm -fv -- # Remove file on success
-  )
+  echo "${sj_access_name}" \
+    | xargs -t  uplink cp "${sqlite_file}" "${sj_prefix}/${sj_filename}" \
+                  --progress=false \
+                  --expires="$(date -d "${sj_shelf_life}" -u +%FT%TZ)" \
+                  --access \
+    | sed -E 's/^Created //' \
+    && (
+      echo "${sqlite_file}" | xargs -t >&2 rm -fv -- # Remove file on success
+    )
+}
+
+_run "$@"

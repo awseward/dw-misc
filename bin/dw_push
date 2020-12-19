@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+_run() {
+  local -r store="$1"
+  local -r sqlite_file="$2"
+  local -r sj_prefix="$3"
+
+  local -r sj_path="$(
+    echo "${sqlite_file}" | xargs -t -I{} dw_push_sqlite {} "${sj_prefix}"
+  )"
+  [ "${sj_path}" == '' ] && return 1
+
+  echo "${sj_path}" | xargs -t dw_signal_sqlite "${store}"
+}
+
+_run "$@"
