@@ -2,17 +2,21 @@
 
 set -euo pipefail
 
-readonly url_base="${DW_INGEST_URL:-localhost:8080}"
-readonly wake_interval_s="${DW_HK_WAKE_INTERVAL_S:-10}"
+_run() {
+  local -r url_base="${DW_INGEST_URL:-localhost:8080}"
+  local -r wake_interval_s="${DW_HK_WAKE_INTERVAL_S:-10}"
 
-readonly store="$1"
-readonly sj_path="$2"
+  local -r store="$1"
+  local -r sj_path="$2"
 
-# Temporary: May need to wake up what's currently a free-tier Heroku dyno
-until echo "${url_base}/wake" | xargs -t curl -s -I
-  do
-    sleep "${wake_interval_s}"
-  done
+  # Temporary: May need to wake up what's currently a free-tier Heroku dyno
+  until echo "${url_base}/wake" | xargs -t curl -s -I
+    do
+      sleep "${wake_interval_s}"
+    done
 
-echo "${sj_path}" \
-  | xargs -t -I{}  curl -s -I "${url_base}/sqlite?sj_path={}&store=${store}"
+  echo "${sj_path}" \
+    | xargs -t -I{}  curl -s -I "${url_base}/sqlite?sj_path={}&store=${store}"
+}
+
+_run "$@"
