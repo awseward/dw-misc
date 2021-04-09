@@ -10,9 +10,9 @@ _run() {
   local -r sj_prefix="$2"
 
   local -r now_s="$(date -u +%Y%m%d%H%M%S)"
-  local -r sj_filename="$(
-    mktemp -u -t "${now_s}-XXXXXXXX-$(basename "${sqlite_file}")" | xargs basename
-  )"
+  local -r filename_prefix="$(mktemp -u -t "${now_s}-XXXXXXXX" | xargs basename)"
+  local -r sj_filename="${filename_prefix}-$(basename "${sqlite_file}")"
+
 
   echo "${sj_access_name}" \
     | xargs -t  uplink cp "${sqlite_file}" "${sj_prefix}/${sj_filename}" \
