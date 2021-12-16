@@ -10,13 +10,13 @@ _run() {
   local -r sj_path="$2"
 
   # Temporary: May need to wake up what's currently a free-tier Heroku dyno
-  until echo "${url_base}/wake" | xargs -t curl -s -I
+  until echo "${url_base}/wake" | xargs -t curl -fsI -m "${wake_interval_s}" --
     do
       sleep "${wake_interval_s}"
     done
 
   echo "${sj_path}" \
-    | xargs -t -I{}  curl -s -I "${url_base}/sqlite?sj_path={}&store=${store}"
+    | xargs -t -I{}  curl -fsI  "${url_base}/sqlite?sj_path={}&store=${store}"
 }
 
 _run "$@"
