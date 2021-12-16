@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+push_sqlite() {
+  local -r sj_prefix="$1"
+  local -r sqlite_file="$2"
+
+  local -r sj_access_name="${SJ_ACCESS_NAME:-dw-write}"
+  local -r sj_shelf_life="${SJ_SHELF_LIFE:-10 days}"
+
+  local -r now_s="$(date -u +%Y%m%d%H%M%S)"
+  local -r filename_prefix="$(mktemp -u -t "${now_s}-XXXXXXXX" | xargs basename)"
+  local -r sj_filename="${filename_prefix}-$(basename "${sqlite_file}")"
+
+  echo "${sj_access_name}" \
+    | xargs -t uplink cp "${sqlite_file}" "${sj_prefix}/${sj_filename}" \
+                 --progress=false \
+                 --expires="$(date -d "${sj_shelf_life}" -u +%FT%TZ)" \
+                 --access \
+    | sed -E 's/^Created //' \
+    && (
+      xargs -t >&2 rm -fv -- <<< "${sqlite_file}" # Remove file on success
+    )
+}
+
+await_() {
+  local -r url_base="$1"
+  local -r wake_interval_s="${DW_HK_WAKE_INTERVAL_S:-10}"
+
+  # Temporary: May need to wake up what's currently a free-tier Heroku dyno
+  until xargs -t curl -fsI -m "${wake_interval_s}" -- <<< "${url_base}/wake"
+  do
+    sleep "${wake_interval_s}"
+  done
+}
+
+signal_sqlite() {
+  local -r store="$1"
+  local -r sj_path="$2"
+  local -r url_base="${DW_INGEST_URL:-localhost:8080}"
+
+  "$0" await_ "${url_base}"
+
+  xargs -t -I{} curl -fsI "${url_base}/sqlite?sj_path={}&store=${store}" <<< "${sj_path}"
+}
+
+push() {
+  local -r store="$1"
+  local -r sj_prefix="$2"
+  local -r sqlite_file="$3"
+
+  local -r sj_path="$(
+    xargs -t "$0" push_sqlite "${sj_prefix}" <<< "${sqlite_file}"
+  )"
+  [ "${sj_path}" == '' ] && return 1
+
+  xargs -t "$0" signal_sqlite "${store}" <<< "${sj_path}"
+}
+
+"$@"

@@ -1,22 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
-_run() {
-  local -r url_base="${DW_INGEST_URL:-localhost:8080}"
-  local -r wake_interval_s="${DW_HK_WAKE_INTERVAL_S:-10}"
-
-  local -r store="$1"
-  local -r sj_path="$2"
-
-  # Temporary: May need to wake up what's currently a free-tier Heroku dyno
-  until echo "${url_base}/wake" | xargs -t curl -fsI -m "${wake_interval_s}" --
-    do
-      sleep "${wake_interval_s}"
-    done
-
-  echo "${sj_path}" \
-    | xargs -t -I{}  curl -fsI  "${url_base}/sqlite?sj_path={}&store=${store}"
-}
-
-_run "$@"
+# shellcheck disable=SC2016
+>&2 echo 'DEPRECATED( '"$0"' ) Prefer `dw signal_sqlite …`'
+exit 1
