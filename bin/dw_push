@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-# shellcheck disable=SC2016
->&2 echo 'DEPRECATED( '"$0"' ) Prefer `dw push …`'
-
-"$(dirname "$0")/dw" push "$1" "$3" "$2"

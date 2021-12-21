@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2021-12-20
+### Removed
+- `bin/dw_` shims (https://github.com/awseward/dw-misc/pull/12)
+
 ## [0.0.4] - 2021-12-15
 ### Changed
 - Consolidate `bin/dw_*` into `bin/dw *` (https://github.com/awseward/dw-misc/pull/10)
